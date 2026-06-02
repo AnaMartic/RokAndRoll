@@ -1,7 +1,7 @@
 package com.orwima.rokandroll.data.repository
 
-import com.orwima.rokandroll.data.model.Task
 import com.google.firebase.firestore.FirebaseFirestore
+import com.orwima.rokandroll.data.model.Task
 import kotlinx.coroutines.tasks.await
 
 class TaskRepository {
@@ -11,5 +11,15 @@ class TaskRepository {
 
     suspend fun addTask(task: Task) {
         tasksCollection.add(task).await()
+    }
+
+    suspend fun getTasks(): List<Task> {
+        return tasksCollection
+            .get()
+            .await()
+            .documents
+            .mapNotNull { document ->
+                document.toObject(Task::class.java)?.copy(id = document.id)
+            }
     }
 }

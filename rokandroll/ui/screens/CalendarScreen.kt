@@ -2,27 +2,38 @@ package com.orwima.rokandroll.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Event
-import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.orwima.rokandroll.data.model.Task
 import com.orwima.rokandroll.navigation.Screen
+import com.orwima.rokandroll.viewmodel.TaskViewModel
 
 @Composable
-fun CalendarScreen(navController: NavController) {
+fun CalendarScreen(
+    navController: NavController,
+    taskViewModel: TaskViewModel = viewModel()
+) {
+    val tasks by taskViewModel.tasks.collectAsState()
+
+    LaunchedEffect(Unit) {
+        taskViewModel.loadTasks()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -46,38 +57,22 @@ fun CalendarScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            DayHeader(day = "Danas")
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            CalendarTaskCard(
-                title = "Predavanje",
-                description = "Razvoj mobilnih aplikacija",
-                time = "10:00 - 12:00",
-                icon = Icons.Default.School
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            CalendarTaskCard(
-                title = "Smjena",
-                description = "Studentski posao",
-                time = "16:00 - 21:00",
-                icon = Icons.Default.Work
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            DayHeader(day = "Sutra")
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            CalendarTaskCard(
-                title = "Kolokvij",
-                description = "Baze podataka",
-                time = "09:00",
-                icon = Icons.Default.Event
-            )
+            if (tasks.isEmpty()) {
+                Text(
+                    text = "Još nema spremljenih obaveza.",
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    contentPadding = PaddingValues(bottom = 90.dp)
+                ) {
+                    items(tasks) { task ->
+                        CalendarTaskCard(task = task)
+                    }
+                }
+            }
         }
 
         FloatingActionButton(
@@ -99,21 +94,7 @@ fun CalendarScreen(navController: NavController) {
 }
 
 @Composable
-fun DayHeader(day: String) {
-    Text(
-        text = day,
-        fontSize = 20.sp,
-        color = Color(0xFF6750A4)
-    )
-}
-
-@Composable
-fun CalendarTaskCard(
-    title: String,
-    description: String,
-    time: String,
-    icon: ImageVector
-) {
+fun CalendarTaskCard(task: Task) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
@@ -134,7 +115,7 @@ fun CalendarTaskCard(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = icon,
+                    imageVector = Icons.Default.Event,
                     contentDescription = null,
                     tint = Color(0xFF6750A4)
                 )
@@ -146,7 +127,7 @@ fun CalendarTaskCard(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = title,
+                    text = task.title,
                     fontSize = 18.sp,
                     color = Color(0xFF2B2B2B)
                 )
@@ -154,14 +135,22 @@ fun CalendarTaskCard(
                 Spacer(modifier = Modifier.height(2.dp))
 
                 Text(
-                    text = description,
+                    text = task.description,
                     fontSize = 14.sp,
+                    color = Color.Gray
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = task.date,
+                    fontSize = 13.sp,
                     color = Color.Gray
                 )
             }
 
             Text(
-                text = time,
+                text = task.time,
                 fontSize = 14.sp,
                 color = Color(0xFF6750A4)
             )
