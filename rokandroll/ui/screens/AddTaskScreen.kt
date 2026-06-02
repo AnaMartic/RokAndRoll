@@ -12,15 +12,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.orwima.rokandroll.data.model.Task
 import com.orwima.rokandroll.navigation.Screen
+import com.orwima.rokandroll.viewmodel.TaskViewModel
 
 @Composable
-fun AddTaskScreen(navController: NavController) {
+fun AddTaskScreen(
+    navController: NavController,
+    taskViewModel: TaskViewModel = viewModel()
+) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var date by remember { mutableStateOf("") }
     var time by remember { mutableStateOf("") }
+
+    val statusMessage by taskViewModel.statusMessage.collectAsState()
 
     Column(
         modifier = Modifier
@@ -82,7 +90,16 @@ fun AddTaskScreen(navController: NavController) {
 
         Button(
             onClick = {
-                navController.navigate(Screen.Calendar.route)
+                val task = Task(
+                    title = title,
+                    description = description,
+                    date = date,
+                    time = time
+                )
+
+                taskViewModel.addTask(task) {
+                    navController.navigate(Screen.Calendar.route)
+                }
             },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -93,6 +110,14 @@ fun AddTaskScreen(navController: NavController) {
             Icon(Icons.Default.Save, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text("Spremi obavezu")
+        }
+
+        if (statusMessage.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = statusMessage,
+                color = Color(0xFF6750A4)
+            )
         }
     }
 }
