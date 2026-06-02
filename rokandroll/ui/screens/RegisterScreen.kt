@@ -22,9 +22,11 @@ fun RegisterScreen(
     navController: NavController,
     authViewModel: AuthViewModel = viewModel()
 ) {
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var repeatedPassword by remember { mutableStateOf("") }
+    var localError by remember { mutableStateOf("") }
 
     val authMessage by authViewModel.authMessage.collectAsState()
 
@@ -50,6 +52,16 @@ fun RegisterScreen(
         )
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Ime") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
 
         OutlinedTextField(
             value = email,
@@ -85,12 +97,26 @@ fun RegisterScreen(
 
         Button(
             onClick = {
-                if (password == repeatedPassword) {
-                    authViewModel.register(email, password) {
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.Register.route) {
-                                inclusive = true
-                            }
+                localError = ""
+
+                if (name.isBlank() || email.isBlank() || password.isBlank()) {
+                    localError = "Sva polja su obavezna."
+                    return@Button
+                }
+
+                if (password != repeatedPassword) {
+                    localError = "Lozinke se ne podudaraju."
+                    return@Button
+                }
+
+                authViewModel.register(
+                    name = name,
+                    email = email,
+                    password = password
+                ) {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Register.route) {
+                            inclusive = true
                         }
                     }
                 }
@@ -116,12 +142,14 @@ fun RegisterScreen(
             Text("Imaš račun? Prijavi se")
         }
 
+        if (localError.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(text = localError, color = Color.Red)
+        }
+
         if (authMessage.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = authMessage,
-                color = Color(0xFF6750A4)
-            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(text = authMessage, color = Color(0xFF6750A4))
         }
     }
 }
