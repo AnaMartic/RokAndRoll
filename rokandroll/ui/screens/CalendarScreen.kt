@@ -18,9 +18,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.orwima.rokandroll.navigation.Screen
 
 @Composable
-fun CalendarScreen() {
+fun CalendarScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -80,7 +82,7 @@ fun CalendarScreen() {
 
         FloatingActionButton(
             onClick = {
-                // kasnije otvaramo ekran za dodavanje obaveze
+                navController.navigate(Screen.AddTask.route)
             },
             containerColor = Color(0xFF6750A4),
             contentColor = Color.White,

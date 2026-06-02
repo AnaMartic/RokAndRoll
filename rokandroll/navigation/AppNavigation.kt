@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.orwima.rokandroll.ui.components.BottomNavigationBar
+import com.orwima.rokandroll.ui.screens.AddTaskScreen
 import com.orwima.rokandroll.ui.screens.CalendarScreen
 import com.orwima.rokandroll.ui.screens.EarningsScreen
 import com.orwima.rokandroll.ui.screens.HomeScreen
@@ -31,11 +32,15 @@ fun AppNavigation() {
             }
 
             composable(Screen.Calendar.route) {
-                CalendarScreen()
+                CalendarScreen(navController = navController)
             }
 
             composable(Screen.Earnings.route) {
                 EarningsScreen()
+            }
+
+            composable(Screen.AddTask.route) {
+                AddTaskScreen(navController = navController)
             }
         }
     }
