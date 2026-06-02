@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -12,10 +13,20 @@ import com.orwima.rokandroll.ui.screens.AddTaskScreen
 import com.orwima.rokandroll.ui.screens.CalendarScreen
 import com.orwima.rokandroll.ui.screens.EarningsScreen
 import com.orwima.rokandroll.ui.screens.HomeScreen
+import com.orwima.rokandroll.ui.screens.LoginScreen
+import com.orwima.rokandroll.ui.screens.RegisterScreen
+import com.orwima.rokandroll.viewmodel.AuthViewModel
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    val authViewModel: AuthViewModel = viewModel()
+
+    val startDestination = if (authViewModel.isUserLoggedIn()) {
+        Screen.Home.route
+    } else {
+        Screen.Login.route
+    }
 
     Scaffold(
         bottomBar = {
@@ -24,9 +35,17 @@ fun AppNavigation() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route,
+            startDestination = startDestination,
             modifier = Modifier.padding(innerPadding)
         ) {
+            composable(Screen.Login.route) {
+                LoginScreen(navController = navController)
+            }
+
+            composable(Screen.Register.route) {
+                RegisterScreen(navController = navController)
+            }
+
             composable(Screen.Home.route) {
                 HomeScreen()
             }
