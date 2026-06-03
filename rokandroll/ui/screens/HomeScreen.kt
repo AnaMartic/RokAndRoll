@@ -28,19 +28,29 @@ import com.orwima.rokandroll.viewmodel.UserViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.orwima.rokandroll.viewmodel.WeatherViewModel
 
 @Composable
 fun HomeScreen(
     navController: NavController,
     userViewModel: UserViewModel = viewModel(),
-    taskViewModel: TaskViewModel = viewModel()
+    taskViewModel: TaskViewModel = viewModel(),
+    weatherViewModel: WeatherViewModel = viewModel()
 ) {
     val user by userViewModel.user.collectAsState()
     val tasks by taskViewModel.tasks.collectAsState()
+    val weatherText by weatherViewModel.weatherText.collectAsState()
 
     LaunchedEffect(Unit) {
         userViewModel.loadCurrentUser()
         taskViewModel.loadTasks()
+    }
+
+    LaunchedEffect(user?.city) {
+        val city = user?.city ?: ""
+        if (city.isNotBlank()) {
+            weatherViewModel.loadWeather(city)
+        }
     }
 
     val displayName = user?.name?.takeIf { it.isNotBlank() } ?: ""
@@ -143,7 +153,7 @@ fun HomeScreen(
 
             SmallInfoCard(
                 title = "Vrijeme",
-                subtitle = "24°C",
+                subtitle = weatherText,
                 icon = Icons.Default.Cloud,
                 modifier = Modifier.weight(1f)
             )
