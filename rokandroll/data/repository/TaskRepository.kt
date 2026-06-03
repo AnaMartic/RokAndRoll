@@ -13,8 +13,9 @@ class TaskRepository {
         tasksCollection.add(task).await()
     }
 
-    suspend fun getTasks(): List<Task> {
+    suspend fun getTasksForUser(userId: String): List<Task> {
         return tasksCollection
+            .whereEqualTo("userId", userId)
             .get()
             .await()
             .documents

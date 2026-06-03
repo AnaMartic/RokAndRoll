@@ -16,6 +16,7 @@ import com.orwima.rokandroll.ui.screens.HomeScreen
 import com.orwima.rokandroll.ui.screens.LoginScreen
 import com.orwima.rokandroll.ui.screens.RegisterScreen
 import com.orwima.rokandroll.viewmodel.AuthViewModel
+import com.orwima.rokandroll.ui.screens.AddShiftScreen
 
 @Composable
 fun AppNavigation() {
@@ -55,11 +56,15 @@ fun AppNavigation() {
             }
 
             composable(Screen.Earnings.route) {
-                EarningsScreen()
+                EarningsScreen(navController = navController)
             }
 
             composable(Screen.AddTask.route) {
                 AddTaskScreen(navController = navController)
+            }
+
+            composable(Screen.AddShift.route) {
+                AddShiftScreen(navController = navController)
             }
         }
     }

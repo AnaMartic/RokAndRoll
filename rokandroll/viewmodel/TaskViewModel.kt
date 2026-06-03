@@ -2,6 +2,7 @@ package com.orwima.rokandroll.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.orwima.rokandroll.data.model.Task
 import com.orwima.rokandroll.data.repository.TaskRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,6 +12,7 @@ import kotlinx.coroutines.launch
 class TaskViewModel : ViewModel() {
 
     private val repository = TaskRepository()
+    private val auth = FirebaseAuth.getInstance()
 
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
     val tasks: StateFlow<List<Task>> = _tasks
@@ -21,8 +23,18 @@ class TaskViewModel : ViewModel() {
     fun addTask(task: Task, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
-                repository.addTask(task)
+                val userId = auth.currentUser?.uid
+
+                if (userId == null) {
+                    _statusMessage.value = "Korisnik nije prijavljen."
+                    return@launch
+                }
+
+                val taskWithUserId = task.copy(userId = userId)
+
+                repository.addTask(taskWithUserId)
                 _statusMessage.value = "Obaveza je spremljena."
+
                 loadTasks()
                 onSuccess()
             } catch (e: Exception) {
@@ -34,7 +46,14 @@ class TaskViewModel : ViewModel() {
     fun loadTasks() {
         viewModelScope.launch {
             try {
-                _tasks.value = repository.getTasks()
+                val userId = auth.currentUser?.uid
+
+                if (userId == null) {
+                    _statusMessage.value = "Korisnik nije prijavljen."
+                    return@launch
+                }
+
+                _tasks.value = repository.getTasksForUser(userId)
             } catch (e: Exception) {
                 _statusMessage.value = "Greška pri dohvaćanju: ${e.message}"
             }
