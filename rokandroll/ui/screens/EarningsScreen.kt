@@ -20,24 +20,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.orwima.rokandroll.data.model.Shift
+import com.orwima.rokandroll.data.model.Task
 import com.orwima.rokandroll.navigation.Screen
-import com.orwima.rokandroll.viewmodel.ShiftViewModel
+import com.orwima.rokandroll.viewmodel.TaskViewModel
 
 @Composable
 fun EarningsScreen(
     navController: NavController,
-    shiftViewModel: ShiftViewModel = viewModel()
+    taskViewModel: TaskViewModel = viewModel()
 ) {
-    val shifts by shiftViewModel.shifts.collectAsState()
+    val tasks by taskViewModel.tasks.collectAsState()
 
     LaunchedEffect(Unit) {
-        shiftViewModel.loadShifts()
+        taskViewModel.loadTasks()
     }
 
-    val totalEarnings = shifts.sumOf { it.earnings }
-    val totalHours = shifts.sumOf { it.hours }
-    val averageRate = if (totalHours > 0) totalEarnings / totalHours else 0.0
+    val hourlyRate = 7.50 // kasnije ide iz korisničkih postavki
+
+    val shifts = tasks.filter { it.type == "Smjena" }
+
+    val totalHours = shifts.sumOf { calculateHours(it.startTime, it.endTime) }
+    val totalEarnings = totalHours * hourlyRate
 
     Box(
         modifier = Modifier
@@ -55,7 +58,7 @@ fun EarningsScreen(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "Pregled studentske zarade",
+                text = "Pregled zarade iz smjena",
                 fontSize = 16.sp,
                 color = Color.Gray
             )
@@ -102,8 +105,8 @@ fun EarningsScreen(
                 )
 
                 EarningsSmallCard(
-                    title = "Prosjek",
-                    value = "%.2f €".format(averageRate),
+                    title = "Satnica",
+                    value = "%.2f €".format(hourlyRate),
                     icon = Icons.Default.Euro,
                     modifier = Modifier.weight(1f)
                 )
@@ -131,7 +134,10 @@ fun EarningsScreen(
                     contentPadding = PaddingValues(bottom = 90.dp)
                 ) {
                     items(shifts) { shift ->
-                        ShiftEarningCard(shift = shift)
+                        ShiftFromTaskCard(
+                            shift = shift,
+                            hourlyRate = hourlyRate
+                        )
                     }
                 }
             }
@@ -139,7 +145,7 @@ fun EarningsScreen(
 
         FloatingActionButton(
             onClick = {
-                navController.navigate(Screen.AddShift.route)
+                navController.navigate(Screen.AddTask.route)
             },
             containerColor = Color(0xFF6750A4),
             contentColor = Color.White,
@@ -200,7 +206,13 @@ fun EarningsSmallCard(
 }
 
 @Composable
-fun ShiftEarningCard(shift: Shift) {
+fun ShiftFromTaskCard(
+    shift: Task,
+    hourlyRate: Double
+) {
+    val hours = calculateHours(shift.startTime, shift.endTime)
+    val earnings = hours * hourlyRate
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -231,17 +243,43 @@ fun ShiftEarningCard(shift: Shift) {
                 )
 
                 Text(
-                    text = "${shift.startTime} - ${shift.endTime} • ${shift.hours} h",
+                    text = "${shift.startTime} - ${shift.endTime} • %.1f h".format(hours),
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
             }
 
             Text(
-                text = "%.2f €".format(shift.earnings),
+                text = "%.2f €".format(earnings),
                 fontSize = 18.sp,
                 color = Color(0xFF6750A4)
             )
         }
+    }
+}
+
+fun calculateHours(startTime: String, endTime: String): Double {
+    return try {
+        val startParts = startTime.split(":")
+        val endParts = endTime.split(":")
+
+        val startHour = startParts[0].toInt()
+        val startMinute = startParts[1].toInt()
+
+        val endHour = endParts[0].toInt()
+        val endMinute = endParts[1].toInt()
+
+        val startTotalMinutes = startHour * 60 + startMinute
+        val endTotalMinutes = endHour * 60 + endMinute
+
+        val difference = endTotalMinutes - startTotalMinutes
+
+        if (difference > 0) {
+            difference / 60.0
+        } else {
+            0.0
+        }
+    } catch (e: Exception) {
+        0.0
     }
 }
