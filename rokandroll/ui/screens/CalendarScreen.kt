@@ -143,6 +143,14 @@ fun CalendarTaskCard(task: Task) {
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
+                    text = task.type,
+                    fontSize = 13.sp,
+                    color = Color(0xFF6750A4)
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
                     text = task.date,
                     fontSize = 13.sp,
                     color = Color.Gray
@@ -150,7 +158,7 @@ fun CalendarTaskCard(task: Task) {
             }
 
             Text(
-                text = task.time,
+                text = "${task.startTime} - ${task.endTime}",
                 fontSize = 14.sp,
                 color = Color(0xFF6750A4)
             )

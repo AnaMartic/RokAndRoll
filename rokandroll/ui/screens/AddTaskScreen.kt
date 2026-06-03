@@ -17,7 +17,9 @@ import androidx.navigation.NavController
 import com.orwima.rokandroll.data.model.Task
 import com.orwima.rokandroll.navigation.Screen
 import com.orwima.rokandroll.viewmodel.TaskViewModel
+import androidx.compose.material3.ExperimentalMaterial3Api
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskScreen(
     navController: NavController,
@@ -26,8 +28,12 @@ fun AddTaskScreen(
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var date by remember { mutableStateOf("") }
-    var time by remember { mutableStateOf("") }
+    var startTime by remember { mutableStateOf("") }
+    var endTime by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf("Predavanje") }
+    var expanded by remember { mutableStateOf(false) }
 
+    val taskTypes = listOf("Predavanje", "Ispit", "Kolokvij", "Smjena", "Ostalo")
     val statusMessage by taskViewModel.statusMessage.collectAsState()
 
     Column(
@@ -46,12 +52,45 @@ fun AddTaskScreen(
             color = Color(0xFF2B2B2B)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                value = selectedType,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Tip obaveze") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+                shape = RoundedCornerShape(16.dp)
+            )
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                taskTypes.forEach { type ->
+                    DropdownMenuItem(
+                        text = { Text(type) },
+                        onClick = {
+                            selectedType = type
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
 
         OutlinedTextField(
             value = title,
             onValueChange = { title = it },
-            label = { Text("Naziv obaveze") },
+            label = { Text("Naziv") },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp)
         )
@@ -79,9 +118,19 @@ fun AddTaskScreen(
         Spacer(modifier = Modifier.height(14.dp))
 
         OutlinedTextField(
-            value = time,
-            onValueChange = { time = it },
-            label = { Text("Vrijeme, npr. 10:00 - 12:00") },
+            value = startTime,
+            onValueChange = { startTime = it },
+            label = { Text("Početak, npr. 10:00") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        OutlinedTextField(
+            value = endTime,
+            onValueChange = { endTime = it },
+            label = { Text("Kraj, npr. 12:00") },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp)
         )
@@ -94,7 +143,9 @@ fun AddTaskScreen(
                     title = title,
                     description = description,
                     date = date,
-                    time = time
+                    startTime = startTime,
+                    endTime = endTime,
+                    type = selectedType
                 )
 
                 taskViewModel.addTask(task) {
