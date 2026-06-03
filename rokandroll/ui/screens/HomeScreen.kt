@@ -25,8 +25,9 @@ import com.orwima.rokandroll.data.model.Task
 import com.orwima.rokandroll.navigation.Screen
 import com.orwima.rokandroll.viewmodel.TaskViewModel
 import com.orwima.rokandroll.viewmodel.UserViewModel
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun HomeScreen(
@@ -44,8 +45,29 @@ fun HomeScreen(
 
     val displayName = user?.name?.takeIf { it.isNotBlank() } ?: ""
 
-    val nextTask = tasks.firstOrNull { it.type != "Smjena" }
-    val nextShift = tasks.firstOrNull { it.type == "Smjena" }
+    val now = Date()
+
+    val nextTask = tasks
+        .filter { it.type != "Smjena" }
+        .mapNotNull { task ->
+            parseTaskDateTime(task)?.let { date ->
+                task to date
+            }
+        }
+        .filter { it.second.after(now) }
+        .minByOrNull { it.second.time }
+        ?.first
+
+    val nextShift = tasks
+        .filter { it.type == "Smjena" }
+        .mapNotNull { task ->
+            parseTaskDateTime(task)?.let { date ->
+                task to date
+            }
+        }
+        .filter { it.second.after(now) }
+        .minByOrNull { it.second.time }
+        ?.first
 
     Column(
         modifier = Modifier
@@ -221,5 +243,14 @@ fun SmallInfoCard(
                 )
             }
         }
+    }
+}
+
+fun parseTaskDateTime(task: Task): Date? {
+    return try {
+        val formatter = SimpleDateFormat("dd.MM.yyyy. HH:mm", Locale.getDefault())
+        formatter.parse("${task.date} ${task.startTime}")
+    } catch (e: Exception) {
+        null
     }
 }
