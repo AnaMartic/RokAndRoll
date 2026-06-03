@@ -23,19 +23,23 @@ import androidx.navigation.NavController
 import com.orwima.rokandroll.data.model.Task
 import com.orwima.rokandroll.navigation.Screen
 import com.orwima.rokandroll.viewmodel.TaskViewModel
+import com.orwima.rokandroll.viewmodel.UserViewModel
 
 @Composable
 fun EarningsScreen(
     navController: NavController,
-    taskViewModel: TaskViewModel = viewModel()
+    taskViewModel: TaskViewModel = viewModel(),
+    userViewModel: UserViewModel = viewModel()
 ) {
     val tasks by taskViewModel.tasks.collectAsState()
+    val user by userViewModel.user.collectAsState()
 
     LaunchedEffect(Unit) {
         taskViewModel.loadTasks()
+        userViewModel.loadCurrentUser()
     }
 
-    val hourlyRate = 7.50 // kasnije ide iz korisničkih postavki
+    val hourlyRate = user?.hourlyRate ?: 0.0
 
     val shifts = tasks.filter { it.type == "Smjena" }
 
