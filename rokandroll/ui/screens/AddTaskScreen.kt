@@ -17,7 +17,8 @@ import androidx.navigation.NavController
 import com.orwima.rokandroll.data.model.Task
 import com.orwima.rokandroll.navigation.Screen
 import com.orwima.rokandroll.viewmodel.TaskViewModel
-import androidx.compose.material3.ExperimentalMaterial3Api
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,14 +28,24 @@ fun AddTaskScreen(
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var date by remember { mutableStateOf("") }
+
+    var selectedDate by remember { mutableStateOf("") }
     var startTime by remember { mutableStateOf("") }
     var endTime by remember { mutableStateOf("") }
+
     var selectedType by remember { mutableStateOf("Predavanje") }
     var expanded by remember { mutableStateOf(false) }
 
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showStartTimePicker by remember { mutableStateOf(false) }
+    var showEndTimePicker by remember { mutableStateOf(false) }
+
     val taskTypes = listOf("Predavanje", "Ispit", "Kolokvij", "Smjena", "Ostalo")
     val statusMessage by taskViewModel.statusMessage.collectAsState()
+
+    val datePickerState = rememberDatePickerState()
+    val startTimePickerState = rememberTimePickerState(is24Hour = true)
+    val endTimePickerState = rememberTimePickerState(is24Hour = true)
 
     Column(
         modifier = Modifier
@@ -107,33 +118,39 @@ fun AddTaskScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        OutlinedTextField(
-            value = date,
-            onValueChange = { date = it },
-            label = { Text("Datum, npr. 12.06.2026.") },
+        OutlinedButton(
+            onClick = { showDatePicker = true },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp)
-        )
+        ) {
+            Text(
+                text = if (selectedDate.isBlank()) "Odaberi datum" else "Datum: $selectedDate"
+            )
+        }
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        OutlinedTextField(
-            value = startTime,
-            onValueChange = { startTime = it },
-            label = { Text("Početak, npr. 10:00") },
+        OutlinedButton(
+            onClick = { showStartTimePicker = true },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp)
-        )
+        ) {
+            Text(
+                text = if (startTime.isBlank()) "Odaberi početak" else "Početak: $startTime"
+            )
+        }
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        OutlinedTextField(
-            value = endTime,
-            onValueChange = { endTime = it },
-            label = { Text("Kraj, npr. 12:00") },
+        OutlinedButton(
+            onClick = { showEndTimePicker = true },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp)
-        )
+        ) {
+            Text(
+                text = if (endTime.isBlank()) "Odaberi kraj" else "Kraj: $endTime"
+            )
+        }
 
         Spacer(modifier = Modifier.height(28.dp))
 
@@ -142,7 +159,7 @@ fun AddTaskScreen(
                 val task = Task(
                     title = title,
                     description = description,
-                    date = date,
+                    date = selectedDate,
                     startTime = startTime,
                     endTime = endTime,
                     type = selectedType
@@ -165,10 +182,96 @@ fun AddTaskScreen(
 
         if (statusMessage.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = statusMessage,
-                color = Color(0xFF6750A4)
-            )
+            Text(text = statusMessage, color = Color(0xFF6750A4))
         }
     }
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val millis = datePickerState.selectedDateMillis
+                        if (millis != null) {
+                            selectedDate = formatDate(millis)
+                        }
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("Odaberi")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Odustani")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    if (showStartTimePicker) {
+        AlertDialog(
+            onDismissRequest = { showStartTimePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        startTime = formatTime(
+                            startTimePickerState.hour,
+                            startTimePickerState.minute
+                        )
+                        showStartTimePicker = false
+                    }
+                ) {
+                    Text("Odaberi")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showStartTimePicker = false }) {
+                    Text("Odustani")
+                }
+            },
+            text = {
+                TimePicker(state = startTimePickerState)
+            }
+        )
+    }
+
+    if (showEndTimePicker) {
+        AlertDialog(
+            onDismissRequest = { showEndTimePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        endTime = formatTime(
+                            endTimePickerState.hour,
+                            endTimePickerState.minute
+                        )
+                        showEndTimePicker = false
+                    }
+                ) {
+                    Text("Odaberi")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEndTimePicker = false }) {
+                    Text("Odustani")
+                }
+            },
+            text = {
+                TimePicker(state = endTimePickerState)
+            }
+        )
+    }
+}
+
+fun formatDate(millis: Long): String {
+    val formatter = SimpleDateFormat("dd.MM.yyyy.", Locale.getDefault())
+    return formatter.format(Date(millis))
+}
+
+fun formatTime(hour: Int, minute: Int): String {
+    return "%02d:%02d".format(hour, minute)
 }

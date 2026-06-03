@@ -7,14 +7,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.DirectionsWalk
-import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,21 +21,31 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.orwima.rokandroll.data.model.Task
 import com.orwima.rokandroll.navigation.Screen
+import com.orwima.rokandroll.viewmodel.TaskViewModel
 import com.orwima.rokandroll.viewmodel.UserViewModel
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun HomeScreen(
     navController: NavController,
-    userViewModel: UserViewModel = viewModel()
+    userViewModel: UserViewModel = viewModel(),
+    taskViewModel: TaskViewModel = viewModel()
 ) {
     val user by userViewModel.user.collectAsState()
+    val tasks by taskViewModel.tasks.collectAsState()
 
     LaunchedEffect(Unit) {
         userViewModel.loadCurrentUser()
+        taskViewModel.loadTasks()
     }
 
     val displayName = user?.name?.takeIf { it.isNotBlank() } ?: ""
+
+    val nextTask = tasks.firstOrNull { it.type != "Smjena" }
+    val nextShift = tasks.firstOrNull { it.type == "Smjena" }
 
     Column(
         modifier = Modifier
@@ -52,7 +59,7 @@ fun HomeScreen(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Bok, $displayName 👋",
+                    text = if (displayName.isNotBlank()) "Bok, $displayName 👋" else "Bok 👋",
                     fontSize = 28.sp,
                     color = Color(0xFF2B2B2B)
                 )
@@ -83,15 +90,19 @@ fun HomeScreen(
 
         InfoCard(
             title = "Sljedeća obaveza",
-            subtitle = "Predavanje iz RMA u 10:00",
-            icon = Icons.Default.School
+            subtitle = nextTask?.let {
+                "${it.title} • ${it.date} • ${it.startTime} - ${it.endTime}"
+            } ?: "Nema spremljenih obaveza",
+            icon = Icons.Default.Event
         )
 
         Spacer(modifier = Modifier.height(14.dp))
 
         InfoCard(
-            title = "Smjena",
-            subtitle = "Rad od 16:00 do 21:00",
+            title = "Sljedeća smjena",
+            subtitle = nextShift?.let {
+                "${it.date} • ${it.startTime} - ${it.endTime}"
+            } ?: "Nema spremljenih smjena",
             icon = Icons.Default.Work
         )
 
@@ -127,7 +138,9 @@ fun InfoCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
@@ -151,8 +164,17 @@ fun InfoCard(
             Spacer(modifier = Modifier.width(16.dp))
 
             Column {
-                Text(text = title, fontSize = 16.sp, color = Color.Gray)
-                Text(text = subtitle, fontSize = 18.sp, color = Color(0xFF2B2B2B))
+                Text(
+                    text = title,
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+
+                Text(
+                    text = subtitle,
+                    fontSize = 16.sp,
+                    color = Color(0xFF2B2B2B)
+                )
             }
         }
     }
@@ -168,7 +190,9 @@ fun SmallInfoCard(
     Card(
         modifier = modifier.height(130.dp),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -184,8 +208,17 @@ fun SmallInfoCard(
             )
 
             Column {
-                Text(text = title, fontSize = 14.sp, color = Color.Gray)
-                Text(text = subtitle, fontSize = 22.sp, color = Color(0xFF2B2B2B))
+                Text(
+                    text = title,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+
+                Text(
+                    text = subtitle,
+                    fontSize = 22.sp,
+                    color = Color(0xFF2B2B2B)
+                )
             }
         }
     }
