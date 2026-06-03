@@ -8,37 +8,76 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.orwima.rokandroll.navigation.Screen
+import com.orwima.rokandroll.viewmodel.UserViewModel
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    navController: NavController,
+    userViewModel: UserViewModel = viewModel()
+) {
+    val user by userViewModel.user.collectAsState()
+
+    LaunchedEffect(Unit) {
+        userViewModel.loadCurrentUser()
+    }
+
+    val displayName = user?.name?.takeIf { it.isNotBlank() } ?: ""
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF7F2FA))
             .padding(20.dp)
     ) {
-        Text(
-            text = "Bok, Marijo 👋",
-            fontSize = 28.sp,
-            color = Color(0xFF2B2B2B)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Bok, $displayName 👋",
+                    fontSize = 28.sp,
+                    color = Color(0xFF2B2B2B)
+                )
 
-        Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
-        Text(
-            text = "Pregled današnjih obaveza",
-            fontSize = 16.sp,
-            color = Color.Gray
-        )
+                Text(
+                    text = "Pregled današnjih obaveza",
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+            }
+
+            IconButton(
+                onClick = {
+                    navController.navigate(Screen.Profile.route)
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Postavke",
+                    tint = Color(0xFF6750A4)
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -83,14 +122,12 @@ fun HomeScreen() {
 fun InfoCard(
     title: String,
     subtitle: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector
+    icon: ImageVector
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
@@ -114,17 +151,8 @@ fun InfoCard(
             Spacer(modifier = Modifier.width(16.dp))
 
             Column {
-                Text(
-                    text = title,
-                    fontSize = 16.sp,
-                    color = Color.Gray
-                )
-
-                Text(
-                    text = subtitle,
-                    fontSize = 18.sp,
-                    color = Color(0xFF2B2B2B)
-                )
+                Text(text = title, fontSize = 16.sp, color = Color.Gray)
+                Text(text = subtitle, fontSize = 18.sp, color = Color(0xFF2B2B2B))
             }
         }
     }
@@ -134,15 +162,13 @@ fun InfoCard(
 fun SmallInfoCard(
     title: String,
     subtitle: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier.height(130.dp),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -158,17 +184,8 @@ fun SmallInfoCard(
             )
 
             Column {
-                Text(
-                    text = title,
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
-
-                Text(
-                    text = subtitle,
-                    fontSize = 22.sp,
-                    color = Color(0xFF2B2B2B)
-                )
+                Text(text = title, fontSize = 14.sp, color = Color.Gray)
+                Text(text = subtitle, fontSize = 22.sp, color = Color(0xFF2B2B2B))
             }
         }
     }

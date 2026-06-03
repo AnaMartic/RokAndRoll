@@ -15,4 +15,19 @@ class UserRepository {
             .set(user)
             .await()
     }
+
+    suspend fun getUser(userId: String): User? {
+        return usersCollection
+            .document(userId)
+            .get()
+            .await()
+            .toObject(User::class.java)
+    }
+
+    suspend fun updateUser(user: User) {
+        usersCollection
+            .document(user.id)
+            .set(user)
+            .await()
+    }
 }
