@@ -29,6 +29,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import com.orwima.rokandroll.viewmodel.WeatherViewModel
+import androidx.compose.ui.platform.LocalContext
+import com.orwima.rokandroll.sensor.StepCounterManager
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 @Composable
 fun HomeScreen(
@@ -40,6 +46,18 @@ fun HomeScreen(
     val user by userViewModel.user.collectAsState()
     val tasks by taskViewModel.tasks.collectAsState()
     val weatherText by weatherViewModel.weatherText.collectAsState()
+    val context = LocalContext.current
+    val stepCounterManager = remember { StepCounterManager(context) }
+    val steps by stepCounterManager.steps.collectAsState()
+    val activityPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            activityPermissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+        }
+    }
 
     LaunchedEffect(Unit) {
         userViewModel.loadCurrentUser()
@@ -50,6 +68,14 @@ fun HomeScreen(
         val city = user?.city ?: ""
         if (city.isNotBlank()) {
             weatherViewModel.loadWeather(city)
+        }
+    }
+
+    DisposableEffect(Unit) {
+        stepCounterManager.startListening()
+
+        onDispose {
+            stepCounterManager.stopListening()
         }
     }
 
@@ -146,7 +172,7 @@ fun HomeScreen(
         ) {
             SmallInfoCard(
                 title = "Koraci",
-                subtitle = "3000",
+                subtitle = steps.toString(),
                 icon = Icons.Default.DirectionsWalk,
                 modifier = Modifier.weight(1f)
             )
