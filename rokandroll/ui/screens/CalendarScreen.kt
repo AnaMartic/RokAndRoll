@@ -31,6 +31,7 @@ fun CalendarScreen(
     taskViewModel: TaskViewModel = viewModel()
 ) {
     val tasks by taskViewModel.tasks.collectAsState()
+    var taskToDelete by remember { mutableStateOf<Task?>(null) }
 
     LaunchedEffect(Unit) {
         taskViewModel.loadTasks()
@@ -77,7 +78,7 @@ fun CalendarScreen(
                                 navController.navigate(Screen.EditTask.createRoute(task.id))
                             },
                             onDeleteClick = {
-                                taskViewModel.deleteTask(task.id)
+                                taskToDelete = task
                             }
                         )
                     }
@@ -100,6 +101,39 @@ fun CalendarScreen(
                 contentDescription = "Dodaj obavezu"
             )
         }
+    }
+
+    if (taskToDelete != null) {
+        AlertDialog(
+            onDismissRequest = {
+                taskToDelete = null
+            },
+            title = {
+                Text("Obrisati obavezu?")
+            },
+            text = {
+                Text("Jeste li sigurni da želite obrisati ovu obavezu?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        taskViewModel.deleteTask(taskToDelete!!.id)
+                        taskToDelete = null
+                    }
+                ) {
+                    Text("Obriši")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        taskToDelete = null
+                    }
+                ) {
+                    Text("Odustani")
+                }
+            }
+        )
     }
 }
 
