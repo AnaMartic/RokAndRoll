@@ -30,6 +30,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.Calendar
 
 @Composable
 fun EarningsScreen(
@@ -51,6 +58,7 @@ fun EarningsScreen(
 
     val totalHours = shifts.sumOf { calculateHours(it.startTime, it.endTime) }
     val totalEarnings = totalHours * hourlyRate
+    var selectedChartFilter by remember { mutableStateOf("Tjedan") }
 
     Box(
         modifier = Modifier
@@ -130,10 +138,16 @@ fun EarningsScreen(
             }
 
             item {
+                ChartFilterRow(
+                    selectedFilter = selectedChartFilter,
+                    onFilterSelected = { selectedChartFilter = it }
+                )
+
                 EarningsLineChart(
                     earningsByDay = shifts.map { shift ->
                         shift.date to (calculateHours(shift.startTime, shift.endTime) * hourlyRate)
-                    }
+                    },
+                    selectedFilter = selectedChartFilter
                 )
             }
 
@@ -306,54 +320,117 @@ fun calculateHours(startTime: String, endTime: String): Double {
 
 @Composable
 fun EarningsLineChart(
-    earningsByDay: List<Pair<String, Double>>
+    earningsByDay: List<Pair<String, Double>>,
+    selectedFilter: String
 ) {
     if (earningsByDay.isEmpty()) return
 
-    val groupedData = earningsByDay
+    val textMeasurer = rememberTextMeasurer()
+
+    val filteredData = earningsByDay.filterBySelectedPeriod(selectedFilter)
+
+    val groupedData = filteredData
         .groupBy { it.first }
         .mapValues { entry -> entry.value.sumOf { it.second } }
         .toList()
-        .sortedBy { it.first }
+        .sortedBy { parseDateForChart(it.first)?.time ?: Long.MAX_VALUE }
 
     val maxEarnings = groupedData.maxOfOrNull { it.second } ?: 0.0
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(220.dp),
+            .height(310.dp),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier.padding(18.dp)
         ) {
             Text(
-                text = "Graf zarade po danima",
+                text = "Graf zarade - $selectedFilter",
                 fontSize = 18.sp,
                 color = Color(0xFF2B2B2B)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            if (groupedData.size < 2 || maxEarnings <= 0.0) {
+                Text(
+                    text = "Dodaj barem dvije smjene za prikaz grafa.",
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+                return@Column
+            }
+
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(140.dp)
+                    .height(220.dp)
             ) {
-                if (groupedData.size < 2 || maxEarnings <= 0.0) {
-                    return@Canvas
+                val leftPadding = 72f
+                val bottomPadding = 55f
+                val topPadding = 16f
+                val rightPadding = 90f
+
+                val chartWidth = size.width - leftPadding - rightPadding
+                val chartHeight = size.height - topPadding - bottomPadding
+
+                val axisColor = Color.Gray
+                val lineColor = Color(0xFF6750A4)
+
+                val origin = Offset(leftPadding, topPadding + chartHeight)
+                val yAxisTop = Offset(leftPadding, topPadding)
+                val xAxisEnd = Offset(leftPadding + chartWidth, topPadding + chartHeight)
+
+                drawLine(
+                    color = axisColor,
+                    start = origin,
+                    end = yAxisTop,
+                    strokeWidth = 3f
+                )
+
+                drawLine(
+                    color = axisColor,
+                    start = origin,
+                    end = xAxisEnd,
+                    strokeWidth = 3f
+                )
+
+                val yLabels = listOf(
+                    0.0,
+                    maxEarnings / 2,
+                    maxEarnings
+                )
+
+                yLabels.forEach { value ->
+                    val y = origin.y - ((value / maxEarnings).toFloat() * chartHeight)
+
+                    drawLine(
+                        color = Color(0xFFE0E0E0),
+                        start = Offset(leftPadding, y),
+                        end = Offset(leftPadding + chartWidth, y),
+                        strokeWidth = 1.5f
+                    )
+
+                    drawText(
+                        textMeasurer = textMeasurer,
+                        text = "%.0f€".format(value),
+                        topLeft = Offset(-22f, y - 12f),
+                        style = androidx.compose.ui.text.TextStyle(
+                            fontSize = 11.sp,
+                            color = Color.Gray
+                        )
+                    )
                 }
 
-                val widthStep = size.width / (groupedData.size - 1)
-                val heightScale = size.height / maxEarnings.toFloat()
+                val widthStep = chartWidth / (groupedData.size - 1)
 
                 val points = groupedData.mapIndexed { index, item ->
-                    val x = index * widthStep
-                    val y = size.height - (item.second.toFloat() * heightScale)
+                    val x = leftPadding + index * widthStep
+                    val y = origin.y - ((item.second / maxEarnings).toFloat() * chartHeight)
                     Offset(x, y)
                 }
 
@@ -366,7 +443,7 @@ fun EarningsLineChart(
 
                 drawPath(
                     path = path,
-                    color = Color(0xFF6750A4),
+                    color = lineColor,
                     style = Stroke(
                         width = 6f,
                         cap = StrokeCap.Round
@@ -375,12 +452,106 @@ fun EarningsLineChart(
 
                 points.forEach { point ->
                     drawCircle(
-                        color = Color(0xFF6750A4),
-                        radius = 8f,
+                        color = lineColor,
+                        radius = 7f,
                         center = point
+                    )
+                }
+
+                groupedData.forEachIndexed { index, item ->
+                    val x = leftPadding + index * widthStep
+                    val label = item.first.take(5)
+
+                    drawText(
+                        textMeasurer = textMeasurer,
+                        text = label,
+                        topLeft = Offset(x - 18f, origin.y + 8f),
+                        style = androidx.compose.ui.text.TextStyle(
+                            fontSize = 10.sp,
+                            color = Color.Gray
+                        )
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ChartFilterRow(
+    selectedFilter: String,
+    onFilterSelected: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        listOf("Tjedan", "Mjesec").forEach { filter ->
+            Button(
+                onClick = { onFilterSelected(filter) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selectedFilter == filter) {
+                        Color(0xFF6750A4)
+                    } else {
+                        Color.White
+                    },
+                    contentColor = if (selectedFilter == filter) {
+                        Color.White
+                    } else {
+                        Color(0xFF6750A4)
+                    }
+                ),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(filter)
+            }
+        }
+    }
+}
+
+fun List<Pair<String, Double>>.filterBySelectedPeriod(
+    selectedFilter: String
+): List<Pair<String, Double>> {
+    val formatter = SimpleDateFormat("dd.MM.yyyy.", Locale.getDefault())
+    val today = Calendar.getInstance()
+
+    val startDate = Calendar.getInstance().apply {
+        time = today.time
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+
+    val endDate = Calendar.getInstance().apply {
+        time = startDate.time
+
+        if (selectedFilter == "Tjedan") {
+            add(Calendar.DAY_OF_YEAR, 7)
+        } else {
+            add(Calendar.MONTH, 1)
+        }
+    }
+
+    return this.filter { item ->
+        val date = try {
+            formatter.parse(item.first)
+        } catch (e: Exception) {
+            null
+        }
+
+        date != null &&
+                !date.before(startDate.time) &&
+                date.before(endDate.time)
+    }
+}
+
+fun parseDateForChart(dateText: String): Date? {
+    return try {
+        val formatter = SimpleDateFormat("dd.MM.yyyy.", Locale.getDefault())
+        formatter.parse(dateText)
+    } catch (e: Exception) {
+        null
     }
 }

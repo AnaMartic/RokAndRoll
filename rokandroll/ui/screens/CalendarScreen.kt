@@ -27,6 +27,7 @@ import androidx.compose.foundation.clickable
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.Calendar
 
 @Composable
 fun CalendarScreen(
@@ -149,13 +150,27 @@ fun CalendarTaskCard(
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
+    val isPast = isTaskInPast(task)
+
+    val cardColor = if (isPast) {
+        Color(0xFFE0E0E0)
+    } else {
+        Color.White
+    }
+
+    val textColor = if (isPast) {
+        Color.Gray
+    } else {
+        Color(0xFF2B2B2B)
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onEditClick() },
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = cardColor
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -185,7 +200,7 @@ fun CalendarTaskCard(
                 Text(
                     text = task.title,
                     fontSize = 18.sp,
-                    color = Color(0xFF2B2B2B)
+                    color = textColor
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
@@ -240,5 +255,16 @@ fun parseTaskDateTimeForCalendar(task: Task): Date? {
         formatter.parse("${task.date} ${task.startTime}")
     } catch (e: Exception) {
         null
+    }
+}
+
+fun isTaskInPast(task: Task): Boolean {
+    return try {
+        val formatter = SimpleDateFormat("dd.MM.yyyy. HH:mm", Locale.getDefault())
+        val taskDate = formatter.parse("${task.date} ${task.startTime}") ?: return false
+
+        taskDate.before(Date())
+    } catch (e: Exception) {
+        false
     }
 }

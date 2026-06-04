@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.orwima.rokandroll.navigation.AppNavigation
 import com.orwima.rokandroll.ui.theme.RokAndRollTheme
+import com.orwima.rokandroll.notifications.ContractNotificationScheduler
 
 class MainActivity : ComponentActivity() {
 
@@ -13,7 +14,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
-
+        ContractNotificationScheduler(this).scheduleNextContractReminder()
         setContent {
             RokAndRollTheme {
                 AppNavigation()
