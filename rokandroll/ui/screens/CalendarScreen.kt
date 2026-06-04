@@ -24,6 +24,9 @@ import com.orwima.rokandroll.navigation.Screen
 import com.orwima.rokandroll.viewmodel.TaskViewModel
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.foundation.clickable
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun CalendarScreen(
@@ -67,11 +70,14 @@ fun CalendarScreen(
                     color = Color.Gray
                 )
             } else {
+                val sortedTasks = tasks.sortedBy { task ->
+                    parseTaskDateTimeForCalendar(task)?.time ?: Long.MAX_VALUE
+                }
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                     contentPadding = PaddingValues(bottom = 90.dp)
                 ) {
-                    items(tasks) { task ->
+                    items(sortedTasks) { task ->
                         CalendarTaskCard(
                             task = task,
                             onEditClick = {
@@ -225,5 +231,14 @@ fun CalendarTaskCard(
                 }
             }
         }
+    }
+}
+
+fun parseTaskDateTimeForCalendar(task: Task): Date? {
+    return try {
+        val formatter = SimpleDateFormat("dd.MM.yyyy. HH:mm", Locale.getDefault())
+        formatter.parse("${task.date} ${task.startTime}")
+    } catch (e: Exception) {
+        null
     }
 }
