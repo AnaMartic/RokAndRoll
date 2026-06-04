@@ -24,6 +24,12 @@ import com.orwima.rokandroll.data.model.Task
 import com.orwima.rokandroll.navigation.Screen
 import com.orwima.rokandroll.viewmodel.TaskViewModel
 import com.orwima.rokandroll.viewmodel.UserViewModel
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 
 @Composable
 fun EarningsScreen(
@@ -50,99 +56,109 @@ fun EarningsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF7F2FA))
-            .padding(20.dp)
     ) {
-        Column {
-            Text(
-                text = "Zarada",
-                fontSize = 30.sp,
-                color = Color(0xFF2B2B2B)
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = "Pregled zarade iz smjena",
-                fontSize = 16.sp,
-                color = Color.Gray
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(26.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF6750A4)
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = PaddingValues(bottom = 100.dp)
+        ) {
+            item {
+                Text(
+                    text = "Zarada",
+                    fontSize = 30.sp,
+                    color = Color(0xFF2B2B2B)
                 )
-            ) {
-                Column(
-                    modifier = Modifier.padding(22.dp)
+            }
+
+            item {
+                Text(
+                    text = "Pregled zarade iz smjena",
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(26.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFF6750A4)
+                    )
                 ) {
-                    Text(
-                        text = "Ukupno",
-                        fontSize = 16.sp,
-                        color = Color.White.copy(alpha = 0.8f)
+                    Column(
+                        modifier = Modifier.padding(22.dp)
+                    ) {
+                        Text(
+                            text = "Ukupno",
+                            fontSize = 16.sp,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "%.2f €".format(totalEarnings),
+                            fontSize = 34.sp,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    EarningsSmallCard(
+                        title = "Sati",
+                        value = "%.1f h".format(totalHours),
+                        icon = Icons.Default.Work,
+                        modifier = Modifier.weight(1f)
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "%.2f €".format(totalEarnings),
-                        fontSize = 34.sp,
-                        color = Color.White
+                    EarningsSmallCard(
+                        title = "Satnica",
+                        value = "%.2f €".format(hourlyRate),
+                        icon = Icons.Default.Euro,
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                EarningsSmallCard(
-                    title = "Sati",
-                    value = "%.1f h".format(totalHours),
-                    icon = Icons.Default.Work,
-                    modifier = Modifier.weight(1f)
-                )
-
-                EarningsSmallCard(
-                    title = "Satnica",
-                    value = "%.2f €".format(hourlyRate),
-                    icon = Icons.Default.Euro,
-                    modifier = Modifier.weight(1f)
+            item {
+                EarningsLineChart(
+                    earningsByDay = shifts.map { shift ->
+                        shift.date to (calculateHours(shift.startTime, shift.endTime) * hourlyRate)
+                    }
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text(
-                text = "Smjene",
-                fontSize = 20.sp,
-                color = Color(0xFF2B2B2B)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
+            item {
+                Text(
+                    text = "Smjene",
+                    fontSize = 20.sp,
+                    color = Color(0xFF2B2B2B)
+                )
+            }
 
             if (shifts.isEmpty()) {
-                Text(
-                    text = "Još nema spremljenih smjena.",
-                    fontSize = 16.sp,
-                    color = Color.Gray
-                )
+                item {
+                    Text(
+                        text = "Još nema spremljenih smjena.",
+                        fontSize = 16.sp,
+                        color = Color.Gray
+                    )
+                }
             } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = 90.dp)
-                ) {
-                    items(shifts) { shift ->
-                        ShiftFromTaskCard(
-                            shift = shift,
-                            hourlyRate = hourlyRate
-                        )
-                    }
+                items(shifts) { shift ->
+                    ShiftFromTaskCard(
+                        shift = shift,
+                        hourlyRate = hourlyRate
+                    )
                 }
             }
         }
@@ -155,7 +171,7 @@ fun EarningsScreen(
             contentColor = Color.White,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(bottom = 16.dp)
+                .padding(20.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
@@ -285,5 +301,86 @@ fun calculateHours(startTime: String, endTime: String): Double {
         }
     } catch (e: Exception) {
         0.0
+    }
+}
+
+@Composable
+fun EarningsLineChart(
+    earningsByDay: List<Pair<String, Double>>
+) {
+    if (earningsByDay.isEmpty()) return
+
+    val groupedData = earningsByDay
+        .groupBy { it.first }
+        .mapValues { entry -> entry.value.sumOf { it.second } }
+        .toList()
+        .sortedBy { it.first }
+
+    val maxEarnings = groupedData.maxOfOrNull { it.second } ?: 0.0
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(220.dp),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp)
+        ) {
+            Text(
+                text = "Graf zarade po danima",
+                fontSize = 18.sp,
+                color = Color(0xFF2B2B2B)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+            ) {
+                if (groupedData.size < 2 || maxEarnings <= 0.0) {
+                    return@Canvas
+                }
+
+                val widthStep = size.width / (groupedData.size - 1)
+                val heightScale = size.height / maxEarnings.toFloat()
+
+                val points = groupedData.mapIndexed { index, item ->
+                    val x = index * widthStep
+                    val y = size.height - (item.second.toFloat() * heightScale)
+                    Offset(x, y)
+                }
+
+                val path = Path().apply {
+                    moveTo(points.first().x, points.first().y)
+                    points.drop(1).forEach { point ->
+                        lineTo(point.x, point.y)
+                    }
+                }
+
+                drawPath(
+                    path = path,
+                    color = Color(0xFF6750A4),
+                    style = Stroke(
+                        width = 6f,
+                        cap = StrokeCap.Round
+                    )
+                )
+
+                points.forEach { point ->
+                    drawCircle(
+                        color = Color(0xFF6750A4),
+                        radius = 8f,
+                        center = point
+                    )
+                }
+            }
+        }
     }
 }
