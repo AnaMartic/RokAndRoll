@@ -19,6 +19,12 @@ import com.orwima.rokandroll.navigation.Screen
 import com.orwima.rokandroll.viewmodel.TaskViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.ui.platform.LocalContext
+import com.orwima.rokandroll.notifications.NotificationScheduler
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +56,21 @@ fun AddTaskScreen(
     val datePickerState = rememberDatePickerState()
     val startTimePickerState = rememberTimePickerState(is24Hour = true)
     val endTimePickerState = rememberTimePickerState(is24Hour = true)
+
+    val context = LocalContext.current
+    val notificationScheduler = remember { NotificationScheduler(context) }
+
+    var isSaving by remember { mutableStateOf(false) }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
     LaunchedEffect(taskId) {
         if (isEditMode) {
@@ -177,6 +198,9 @@ fun AddTaskScreen(
 
         Button(
             onClick = {
+                if (isSaving) return@Button
+                isSaving = true
+
                 val task = Task(
                     id = taskId ?: "",
                     userId = selectedTask?.userId ?: "",
@@ -190,16 +214,14 @@ fun AddTaskScreen(
 
                 if (isEditMode) {
                     taskViewModel.updateTask(task) {
+                        notificationScheduler.scheduleTaskReminder(task)
                         navController.navigate(Screen.Calendar.route)
                     }
                 } else {
                     taskViewModel.addTask(task) {
+                        notificationScheduler.scheduleTaskReminder(task)
                         navController.navigate(Screen.Calendar.route)
                     }
-                }
-
-                taskViewModel.addTask(task) {
-                    navController.navigate(Screen.Calendar.route)
                 }
             },
             modifier = Modifier.fillMaxWidth(),
