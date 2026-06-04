@@ -23,6 +23,7 @@ import com.orwima.rokandroll.data.model.Task
 import com.orwima.rokandroll.navigation.Screen
 import com.orwima.rokandroll.viewmodel.TaskViewModel
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.foundation.clickable
 
 @Composable
 fun CalendarScreen(
@@ -72,6 +73,9 @@ fun CalendarScreen(
                     items(tasks) { task ->
                         CalendarTaskCard(
                             task = task,
+                            onEditClick = {
+                                navController.navigate(Screen.EditTask.createRoute(task.id))
+                            },
                             onDeleteClick = {
                                 taskViewModel.deleteTask(task.id)
                             }
@@ -102,10 +106,13 @@ fun CalendarScreen(
 @Composable
 fun CalendarTaskCard(
     task: Task,
+    onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onEditClick() },
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White

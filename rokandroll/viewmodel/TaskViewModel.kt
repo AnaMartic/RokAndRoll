@@ -88,6 +88,32 @@ class TaskViewModel : ViewModel() {
             }
         }
     }
+
+    private val _selectedTask = MutableStateFlow<Task?>(null)
+    val selectedTask: StateFlow<Task?> = _selectedTask
+
+    fun loadTaskById(taskId: String) {
+        viewModelScope.launch {
+            try {
+                _selectedTask.value = repository.getTaskById(taskId)
+            } catch (e: Exception) {
+                _statusMessage.value = "Greška pri dohvaćanju obaveze: ${e.message}"
+            }
+        }
+    }
+
+    fun updateTask(task: Task, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                repository.updateTask(task)
+                _statusMessage.value = "Obaveza je ažurirana."
+                loadTasks()
+                onSuccess()
+            } catch (e: Exception) {
+                _statusMessage.value = "Greška pri ažuriranju: ${e.message}"
+            }
+        }
+    }
 }
 
 fun timesOverlap(

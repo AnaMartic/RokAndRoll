@@ -30,4 +30,20 @@ class TaskRepository {
             .delete()
             .await()
     }
+
+    suspend fun getTaskById(taskId: String): Task? {
+        return tasksCollection
+            .document(taskId)
+            .get()
+            .await()
+            .toObject(Task::class.java)
+            ?.copy(id = taskId)
+    }
+
+    suspend fun updateTask(task: Task) {
+        tasksCollection
+            .document(task.id)
+            .set(task)
+            .await()
+    }
 }

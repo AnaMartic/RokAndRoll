@@ -24,6 +24,7 @@ import java.util.*
 @Composable
 fun AddTaskScreen(
     navController: NavController,
+    taskId: String? = null,
     taskViewModel: TaskViewModel = viewModel()
 ) {
     var title by remember { mutableStateOf("") }
@@ -43,9 +44,29 @@ fun AddTaskScreen(
     val taskTypes = listOf("Predavanje", "Ispit", "Kolokvij", "Smjena", "Ostalo")
     val statusMessage by taskViewModel.statusMessage.collectAsState()
 
+    val selectedTask by taskViewModel.selectedTask.collectAsState()
+    val isEditMode = !taskId.isNullOrBlank()
+
     val datePickerState = rememberDatePickerState()
     val startTimePickerState = rememberTimePickerState(is24Hour = true)
     val endTimePickerState = rememberTimePickerState(is24Hour = true)
+
+    LaunchedEffect(taskId) {
+        if (isEditMode) {
+            taskViewModel.loadTaskById(taskId!!)
+        }
+    }
+
+    LaunchedEffect(selectedTask) {
+        selectedTask?.let { task ->
+            title = task.title
+            description = task.description
+            selectedDate = task.date
+            startTime = task.startTime
+            endTime = task.endTime
+            selectedType = task.type
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -58,7 +79,7 @@ fun AddTaskScreen(
         }
 
         Text(
-            text = "Dodaj obavezu",
+            text = if (isEditMode) "Uredi obavezu" else "Dodaj obavezu",
             fontSize = 30.sp,
             color = Color(0xFF2B2B2B)
         )
@@ -157,6 +178,8 @@ fun AddTaskScreen(
         Button(
             onClick = {
                 val task = Task(
+                    id = taskId ?: "",
+                    userId = selectedTask?.userId ?: "",
                     title = title,
                     description = description,
                     date = selectedDate,
@@ -164,6 +187,16 @@ fun AddTaskScreen(
                     endTime = endTime,
                     type = selectedType
                 )
+
+                if (isEditMode) {
+                    taskViewModel.updateTask(task) {
+                        navController.navigate(Screen.Calendar.route)
+                    }
+                } else {
+                    taskViewModel.addTask(task) {
+                        navController.navigate(Screen.Calendar.route)
+                    }
+                }
 
                 taskViewModel.addTask(task) {
                     navController.navigate(Screen.Calendar.route)
@@ -177,7 +210,7 @@ fun AddTaskScreen(
         ) {
             Icon(Icons.Default.Save, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Spremi obavezu")
+            Text(if (isEditMode) "Spremi promjene" else "Spremi obavezu")
         }
 
         if (statusMessage.isNotEmpty()) {

@@ -18,6 +18,8 @@ import com.orwima.rokandroll.ui.screens.RegisterScreen
 import com.orwima.rokandroll.viewmodel.AuthViewModel
 import com.orwima.rokandroll.ui.screens.AddShiftScreen
 import com.orwima.rokandroll.ui.screens.ProfileScreen
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 
 @Composable
 fun AppNavigation() {
@@ -70,6 +72,21 @@ fun AppNavigation() {
 
             composable(Screen.Profile.route) {
                 ProfileScreen(navController = navController)
+            }
+
+            composable(
+                route = Screen.EditTask.route,
+                arguments = listOf(
+                    navArgument("taskId") {
+                        type = NavType.StringType
+                    }
+                )
+            ) { backStackEntry ->
+                val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+                AddTaskScreen(
+                    navController = navController,
+                    taskId = taskId
+                )
             }
         }
     }
