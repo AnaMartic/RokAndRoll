@@ -23,4 +23,11 @@ class TaskRepository {
                 document.toObject(Task::class.java)?.copy(id = document.id)
             }
     }
+
+    suspend fun deleteTask(taskId: String) {
+        tasksCollection
+            .document(taskId)
+            .delete()
+            .await()
+    }
 }

@@ -22,6 +22,7 @@ import androidx.navigation.NavController
 import com.orwima.rokandroll.data.model.Task
 import com.orwima.rokandroll.navigation.Screen
 import com.orwima.rokandroll.viewmodel.TaskViewModel
+import androidx.compose.material.icons.filled.Delete
 
 @Composable
 fun CalendarScreen(
@@ -69,7 +70,12 @@ fun CalendarScreen(
                     contentPadding = PaddingValues(bottom = 90.dp)
                 ) {
                     items(tasks) { task ->
-                        CalendarTaskCard(task = task)
+                        CalendarTaskCard(
+                            task = task,
+                            onDeleteClick = {
+                                taskViewModel.deleteTask(task.id)
+                            }
+                        )
                     }
                 }
             }
@@ -94,7 +100,10 @@ fun CalendarScreen(
 }
 
 @Composable
-fun CalendarTaskCard(task: Task) {
+fun CalendarTaskCard(
+    task: Task,
+    onDeleteClick: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
@@ -157,11 +166,23 @@ fun CalendarTaskCard(task: Task) {
                 )
             }
 
-            Text(
-                text = "${task.startTime} - ${task.endTime}",
-                fontSize = 14.sp,
-                color = Color(0xFF6750A4)
-            )
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = "${task.startTime} - ${task.endTime}",
+                    fontSize = 14.sp,
+                    color = Color(0xFF6750A4)
+                )
+
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Obriši obavezu",
+                        tint = Color.Red
+                    )
+                }
+            }
         }
     }
 }

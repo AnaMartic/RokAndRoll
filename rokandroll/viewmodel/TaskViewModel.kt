@@ -76,6 +76,18 @@ class TaskViewModel : ViewModel() {
             }
         }
     }
+
+    fun deleteTask(taskId: String) {
+        viewModelScope.launch {
+            try {
+                repository.deleteTask(taskId)
+                _statusMessage.value = "Obaveza je obrisana."
+                loadTasks()
+            } catch (e: Exception) {
+                _statusMessage.value = "Greška pri brisanju: ${e.message}"
+            }
+        }
+    }
 }
 
 fun timesOverlap(
