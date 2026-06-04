@@ -53,6 +53,34 @@ fun HomeScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { }
 
+    val today = SimpleDateFormat(
+        "dd.MM.yyyy.",
+        Locale.getDefault()
+    ).format(Date())
+
+    val todayTasksCount = tasks.count {
+        it.date == today
+    }
+
+    val hourlyRate = user?.hourlyRate ?: 0.0
+
+    val currentMonth = SimpleDateFormat(
+        "MM.yyyy",
+        Locale.getDefault()
+    ).format(Date())
+
+    val monthlyEarnings = tasks
+        .filter {
+            it.type == "Smjena" &&
+                    it.date.contains(currentMonth)
+        }
+        .sumOf {
+            calculateHours(
+                it.startTime,
+                it.endTime
+            ) * hourlyRate
+        }
+
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             activityPermissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
@@ -163,6 +191,27 @@ fun HomeScreen(
             } ?: "Nema spremljenih smjena",
             icon = Icons.Default.Work
         )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            SmallInfoCard(
+                title = "Danas",
+                subtitle = "$todayTasksCount obaveza",
+                icon = Icons.Default.Event,
+                modifier = Modifier.weight(1f)
+            )
+
+            SmallInfoCard(
+                title = "Ovaj mjesec",
+                subtitle = "%.2f €".format(monthlyEarnings),
+                icon = Icons.Default.Work,
+                modifier = Modifier.weight(1f)
+            )
+        }
 
         Spacer(modifier = Modifier.height(14.dp))
 
