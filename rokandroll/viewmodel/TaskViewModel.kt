@@ -30,7 +30,9 @@ class TaskViewModel : ViewModel() {
                     return@launch
                 }
 
-                val existingTasks = repository.getTasksForUser(userId)
+                val existingTasks = repository
+                    .getTasksForUser(userId)
+                    .filter { !it.deleted }
 
                 val hasOverlap = existingTasks.any { existingTask ->
                     existingTask.date == task.date &&

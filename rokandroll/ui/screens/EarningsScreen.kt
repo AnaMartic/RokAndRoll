@@ -54,7 +54,16 @@ fun EarningsScreen(
 
     val hourlyRate = user?.hourlyRate ?: 0.0
 
-    val shifts = tasks.filter { it.type == "Smjena" }
+    val currentMonth = SimpleDateFormat(
+        "MM.yyyy",
+        Locale.getDefault()
+    ).format(Date())
+
+    val shifts = tasks.filter {
+        it.type == "Smjena" &&
+                it.date.contains(currentMonth) &&
+                isShiftInPast(it)
+    }
 
     val totalHours = shifts.sumOf { calculateHours(it.startTime, it.endTime) }
     val totalEarnings = totalHours * hourlyRate
@@ -100,7 +109,7 @@ fun EarningsScreen(
                         modifier = Modifier.padding(22.dp)
                     ) {
                         Text(
-                            text = "Ukupno",
+                            text = "Ovaj mjesec",
                             fontSize = 16.sp,
                             color = Color.White.copy(alpha = 0.8f)
                         )
@@ -553,5 +562,15 @@ fun parseDateForChart(dateText: String): Date? {
         formatter.parse(dateText)
     } catch (e: Exception) {
         null
+    }
+}
+
+fun isShiftInPast(task: Task): Boolean {
+    return try {
+        val formatter = SimpleDateFormat("dd.MM.yyyy. HH:mm", Locale.getDefault())
+        val shiftDateTime = formatter.parse("${task.date} ${task.endTime}") ?: return false
+        shiftDateTime.before(Date())
+    } catch (e: Exception) {
+        false
     }
 }

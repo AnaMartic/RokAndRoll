@@ -72,7 +72,8 @@ fun HomeScreen(
     val monthlyEarnings = tasks
         .filter {
             it.type == "Smjena" &&
-                    it.date.contains(currentMonth)
+                    it.date.contains(currentMonth) &&
+                    isShiftInPast(it)
         }
         .sumOf {
             calculateHours(
