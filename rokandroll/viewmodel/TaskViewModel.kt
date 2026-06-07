@@ -114,6 +114,18 @@ class TaskViewModel : ViewModel() {
             }
         }
     }
+
+    fun softDeleteTask(task: Task) {
+        viewModelScope.launch {
+            try {
+                repository.softDeleteTask(task)
+                _statusMessage.value = "Obaveza je uklonjena iz kalendara."
+                loadTasks()
+            } catch (e: Exception) {
+                _statusMessage.value = "Greška pri uklanjanju: ${e.message}"
+            }
+        }
+    }
 }
 
 fun timesOverlap(

@@ -31,6 +31,13 @@ class TaskRepository {
             .await()
     }
 
+    suspend fun softDeleteTask(task: Task) {
+        tasksCollection
+            .document(task.id)
+            .set(task.copy(deleted = true))
+            .await()
+    }
+
     suspend fun getTaskById(taskId: String): Task? {
         return tasksCollection
             .document(taskId)

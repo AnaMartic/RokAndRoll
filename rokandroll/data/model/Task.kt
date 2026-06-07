@@ -8,5 +8,6 @@ data class Task(
     val date: String = "",
     val startTime: String = "",
     val endTime: String = "",
-    val type: String = ""
+    val type: String = "",
+    val deleted: Boolean = false
 )

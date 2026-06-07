@@ -64,6 +64,8 @@ fun CalendarScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            val visibleTasks = tasks.filter { !it.deleted }
+
             if (tasks.isEmpty()) {
                 Text(
                     text = "Još nema spremljenih obaveza.",
@@ -71,7 +73,7 @@ fun CalendarScreen(
                     color = Color.Gray
                 )
             } else {
-                val sortedTasks = tasks.sortedBy { task ->
+                val sortedTasks = visibleTasks.sortedBy { task ->
                     parseTaskDateTimeForCalendar(task)?.time ?: Long.MAX_VALUE
                 }
                 LazyColumn(
@@ -124,7 +126,7 @@ fun CalendarScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        taskViewModel.deleteTask(taskToDelete!!.id)
+                        taskViewModel.softDeleteTask(taskToDelete!!)
                         taskToDelete = null
                     }
                 ) {
