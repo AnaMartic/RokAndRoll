@@ -79,4 +79,23 @@ class UserViewModel : ViewModel() {
     fun logout() {
         auth.signOut()
     }
+
+    fun updateDailySteps(
+        steps: Int,
+        date: String
+    ) {
+        viewModelScope.launch {
+            try {
+                val currentUser = _user.value ?: return@launch
+
+                repository.updateUser(
+                    currentUser.copy(
+                        dailySteps = steps,
+                        stepsDate = date
+                    )
+                )
+            } catch (_: Exception) {
+            }
+        }
+    }
 }

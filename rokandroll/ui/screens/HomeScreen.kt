@@ -258,7 +258,7 @@ fun InfoCard(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFEADDFF)),
+                    .background(Color(0xFFF8F9FC)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
