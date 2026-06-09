@@ -20,6 +20,7 @@ import com.orwima.rokandroll.ui.screens.AddShiftScreen
 import com.orwima.rokandroll.ui.screens.ProfileScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun AppNavigation() {
@@ -33,6 +34,7 @@ fun AppNavigation() {
     }
 
     Scaffold(
+        containerColor = Color(0xFF1B2243),
         bottomBar = {
             BottomNavigationBar(navController = navController)
         }

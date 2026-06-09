@@ -28,6 +28,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.Calendar
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.orwima.rokandroll.R
+import androidx.compose.ui.graphics.graphicsLayer
 
 @Composable
 fun CalendarScreen(
@@ -42,12 +47,29 @@ fun CalendarScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF7F2FA))
-            .padding(20.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
-        Column {
+        Image(
+            painter = painterResource(R.drawable.calendar_bg),
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    scaleX = 1.25f
+                    scaleY = 1.25f
+                },
+            contentScale = ContentScale.Fit
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    start = 20.dp,
+                    end = 20.dp,
+                    top = 60.dp,
+                    bottom = 20.dp
+                )
+        ) {
             Text(
                 text = "Kalendar",
                 fontSize = 30.sp,
@@ -104,6 +126,7 @@ fun CalendarScreen(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(bottom = 16.dp)
+                .offset(x = (-20).dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Add,

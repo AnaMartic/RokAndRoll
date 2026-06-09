@@ -37,6 +37,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.Calendar
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.orwima.rokandroll.R
+import androidx.compose.ui.graphics.graphicsLayer
 
 @Composable
 fun EarningsScreen(
@@ -74,6 +79,13 @@ fun EarningsScreen(
             .fillMaxSize()
             .background(Color(0xFFF7F2FA))
     ) {
+        Image(
+            painter = painterResource(R.drawable.earnings_bg),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -85,7 +97,7 @@ fun EarningsScreen(
                 Text(
                     text = "Zarada",
                     fontSize = 30.sp,
-                    color = Color(0xFF2B2B2B)
+                    color = Color.White
                 )
             }
 
@@ -93,34 +105,46 @@ fun EarningsScreen(
                 Text(
                     text = "Pregled zarade iz smjena",
                     fontSize = 16.sp,
-                    color = Color.Gray
+                    color = Color.LightGray
                 )
             }
 
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(26.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFF6750A4)
-                    )
+                    shape = RoundedCornerShape(26.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(22.dp)
-                    ) {
-                        Text(
-                            text = "Ovaj mjesec",
-                            fontSize = 16.sp,
-                            color = Color.White.copy(alpha = 0.8f)
+                    Box(
+                        modifier = Modifier.fillMaxWidth()
+                    ){
+                        Image(
+                            painter = painterResource(R.drawable.monthlyearnings_card),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .matchParentSize()
+                                .graphicsLayer {
+                                    scaleX = 1.15f
+                                },
+                            contentScale = ContentScale.Crop
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Column(
+                            modifier = Modifier.padding(22.dp)
+                        ) {
+                            Text(
+                                text = "Ovaj mjesec",
+                                fontSize = 16.sp,
+                                color = Color.White.copy(alpha = 0.8f)
+                            )
 
-                        Text(
-                            text = "%.2f €".format(totalEarnings),
-                            fontSize = 34.sp,
-                            color = Color.White
-                        )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = "%.2f €".format(totalEarnings),
+                                fontSize = 34.sp,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }
@@ -134,6 +158,7 @@ fun EarningsScreen(
                         title = "Sati",
                         value = "%.1f h".format(totalHours),
                         icon = Icons.Default.Work,
+                        backgroundImage = R.drawable.hours_card,
                         modifier = Modifier.weight(1f)
                     )
 
@@ -141,6 +166,7 @@ fun EarningsScreen(
                         title = "Satnica",
                         value = "%.2f €".format(hourlyRate),
                         icon = Icons.Default.Euro,
+                        backgroundImage = R.drawable.totalmoney_card,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -164,7 +190,7 @@ fun EarningsScreen(
                 Text(
                     text = "Smjene",
                     fontSize = 20.sp,
-                    color = Color(0xFF2B2B2B)
+                    color = Color.White
                 )
             }
 
@@ -209,40 +235,48 @@ fun EarningsSmallCard(
     title: String,
     value: String,
     icon: ImageVector,
+    backgroundImage: Int,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier.height(120.dp),
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        shape = RoundedCornerShape(22.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(18.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Icon(
-                imageVector = icon,
+            Image(
+                painter = painterResource(backgroundImage),
                 contentDescription = null,
-                tint = Color(0xFF6750A4)
+                modifier = Modifier.matchParentSize(),
+                contentScale = ContentScale.Crop
             )
 
-            Column {
-                Text(
-                    text = title,
-                    fontSize = 14.sp,
-                    color = Color.Gray
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(18.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color(0xFF492C96)
                 )
 
-                Text(
-                    text = value,
-                    fontSize = 22.sp,
-                    color = Color(0xFF2B2B2B)
-                )
+                Column {
+                    Text(
+                        text = title,
+                        fontSize = 14.sp,
+                        color = Color(0xFF492C96)
+                    )
+
+                    Text(
+                        text = value,
+                        fontSize = 22.sp,
+                        color = Color(0xFF492C96)
+                    )
+                }
             }
         }
     }

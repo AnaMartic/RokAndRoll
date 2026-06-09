@@ -35,6 +35,10 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.orwima.rokandroll.R
 
 @Composable
 fun HomeScreen(
@@ -134,108 +138,130 @@ fun HomeScreen(
         .minByOrNull { it.second.time }
         ?.first
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF7F2FA))
-            .padding(20.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = if (displayName.isNotBlank()) "Bok, $displayName 👋" else "Bok 👋",
-                    fontSize = 28.sp,
-                    color = Color(0xFF2B2B2B)
-                )
+            Image(
+                painter = painterResource(R.drawable.background_home),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
 
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = "Pregled današnjih obaveza",
-                    fontSize = 16.sp,
-                    color = Color.Gray
-                )
-            }
-
-            IconButton(
-                onClick = {
-                    navController.navigate(Screen.Profile.route)
-                }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        start = 20.dp,
+                        end = 20.dp,
+                        bottom = 20.dp,
+                        top = 60.dp
+                    )
             ) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Postavke",
-                    tint = Color(0xFF6750A4)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (displayName.isNotBlank()) "Bok, $displayName 👋" else "Bok 👋",
+                            fontSize = 28.sp,
+                            color = Color.White
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Text(
+                            text = "Pregled današnjih obaveza",
+                            fontSize = 16.sp,
+                            color = Color.Gray
+                        )
+                    }
+
+                    IconButton(
+                        onClick = {
+                            navController.navigate(Screen.Profile.route)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Postavke",
+                            tint = Color(0xFF6750A4)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                InfoCard(
+                    title = "Sljedeća obaveza",
+                    subtitle = nextTask?.let {
+                        "${it.title} • ${it.date} • ${it.startTime} - ${it.endTime}"
+                    } ?: "Nema spremljenih obaveza",
+                    icon = Icons.Default.Event
                 )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                InfoCard(
+                    title = "Sljedeća smjena",
+                    subtitle = nextShift?.let {
+                        "${it.date} • ${it.startTime} - ${it.endTime}"
+                    } ?: "Nema spremljenih smjena",
+                    icon = Icons.Default.Work
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    SmallInfoCard(
+                        title = "Danas",
+                        subtitle = "$todayTasksCount obaveza",
+                        icon = Icons.Default.Event,
+                        backgroundImage = R.drawable.tasks_card,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    SmallInfoCard(
+                        title = "Ovaj mjesec",
+                        subtitle = "%.2f €".format(monthlyEarnings),
+                        icon = Icons.Default.Work,
+                        backgroundImage = R.drawable.money_card,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    SmallInfoCard(
+                        title = "Koraci",
+                        subtitle = steps.toString(),
+                        icon = Icons.Default.DirectionsWalk,
+                        backgroundImage = R.drawable.steps_card,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    SmallInfoCard(
+                        title = "Vrijeme",
+                        subtitle = weatherText,
+                        icon = Icons.Default.Cloud,
+                        backgroundImage = R.drawable.weather_card,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        InfoCard(
-            title = "Sljedeća obaveza",
-            subtitle = nextTask?.let {
-                "${it.title} • ${it.date} • ${it.startTime} - ${it.endTime}"
-            } ?: "Nema spremljenih obaveza",
-            icon = Icons.Default.Event
-        )
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        InfoCard(
-            title = "Sljedeća smjena",
-            subtitle = nextShift?.let {
-                "${it.date} • ${it.startTime} - ${it.endTime}"
-            } ?: "Nema spremljenih smjena",
-            icon = Icons.Default.Work
-        )
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            SmallInfoCard(
-                title = "Danas",
-                subtitle = "$todayTasksCount obaveza",
-                icon = Icons.Default.Event,
-                modifier = Modifier.weight(1f)
-            )
-
-            SmallInfoCard(
-                title = "Ovaj mjesec",
-                subtitle = "%.2f €".format(monthlyEarnings),
-                icon = Icons.Default.Work,
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            SmallInfoCard(
-                title = "Koraci",
-                subtitle = steps.toString(),
-                icon = Icons.Default.DirectionsWalk,
-                modifier = Modifier.weight(1f)
-            )
-
-            SmallInfoCard(
-                title = "Vrijeme",
-                subtitle = weatherText,
-                icon = Icons.Default.Cloud,
-                modifier = Modifier.weight(1f)
-            )
-        }
     }
 }
+
 
 @Composable
 fun InfoCard(
@@ -247,7 +273,7 @@ fun InfoCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = Color(0xFFF9F9FB)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -259,7 +285,7 @@ fun InfoCard(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFF8F9FC)),
+                    .background(Color(0xFFF3F1FB)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -281,7 +307,7 @@ fun InfoCard(
                 Text(
                     text = subtitle,
                     fontSize = 16.sp,
-                    color = Color(0xFF2B2B2B)
+                    color = Color(0xFF2b1954)
                 )
             }
         }
@@ -293,40 +319,49 @@ fun SmallInfoCard(
     title: String,
     subtitle: String,
     icon: ImageVector,
+    backgroundImage: Int,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier.height(130.dp),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(18.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Icon(
-                imageVector = icon,
+            Image(
+                painter = painterResource(backgroundImage),
                 contentDescription = null,
-                tint = Color(0xFF6750A4)
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
             )
 
-            Column {
-                Text(
-                    text = title,
-                    fontSize = 14.sp,
-                    color = Color.Gray
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(18.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color(0xFF492C96)
                 )
 
-                Text(
-                    text = subtitle,
-                    fontSize = 22.sp,
-                    color = Color(0xFF2B2B2B)
-                )
+                Column {
+                    Text(
+                        text = title,
+                        fontSize = 14.sp,
+                        color = Color(0xFF2b1954)
+                    )
+
+                    Text(
+                        text = subtitle,
+                        fontSize = 22.sp,
+                        color = Color(0xFF2b1954)
+                    )
+                }
             }
         }
     }
