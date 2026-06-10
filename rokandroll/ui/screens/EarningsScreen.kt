@@ -64,13 +64,18 @@ fun EarningsScreen(
         Locale.getDefault()
     ).format(Date())
 
-    val shifts = tasks.filter {
+    val currentMonthShifts = tasks.filter {
         it.type == "Smjena" &&
                 it.date.contains(currentMonth) &&
                 isShiftInPast(it)
     }
 
-    val totalHours = shifts.sumOf { calculateHours(it.startTime, it.endTime) }
+    val chartShifts = tasks.filter {
+        it.type == "Smjena" &&
+                isShiftInPast(it)
+    }
+
+    val totalHours = currentMonthShifts.sumOf { calculateHours(it.startTime, it.endTime) }
     val totalEarnings = totalHours * hourlyRate
     var selectedChartFilter by remember { mutableStateOf("Tjedan") }
 
@@ -179,7 +184,7 @@ fun EarningsScreen(
                 )
 
                 EarningsLineChart(
-                    earningsByDay = shifts.map { shift ->
+                    earningsByDay = chartShifts.map { shift ->
                         shift.date to (calculateHours(shift.startTime, shift.endTime) * hourlyRate)
                     },
                     selectedFilter = selectedChartFilter
@@ -194,7 +199,7 @@ fun EarningsScreen(
                 )
             }
 
-            if (shifts.isEmpty()) {
+            if (currentMonthShifts.isEmpty()) {
                 item {
                     Text(
                         text = "Još nema spremljenih smjena.",
@@ -203,7 +208,7 @@ fun EarningsScreen(
                     )
                 }
             } else {
-                items(shifts) { shift ->
+                items(currentMonthShifts) { shift ->
                     ShiftFromTaskCard(
                         shift = shift,
                         hourlyRate = hourlyRate
@@ -557,24 +562,27 @@ fun List<Pair<String, Double>>.filterBySelectedPeriod(
     selectedFilter: String
 ): List<Pair<String, Double>> {
     val formatter = SimpleDateFormat("dd.MM.yyyy.", Locale.getDefault())
-    val today = Calendar.getInstance()
+
+    val today = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 23)
+        set(Calendar.MINUTE, 59)
+        set(Calendar.SECOND, 59)
+        set(Calendar.MILLISECOND, 999)
+    }
 
     val startDate = Calendar.getInstance().apply {
         time = today.time
+
+        if (selectedFilter == "Tjedan") {
+            add(Calendar.DAY_OF_YEAR, -6)
+        } else {
+            set(Calendar.DAY_OF_MONTH, 1)
+        }
+
         set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)
         set(Calendar.SECOND, 0)
         set(Calendar.MILLISECOND, 0)
-    }
-
-    val endDate = Calendar.getInstance().apply {
-        time = startDate.time
-
-        if (selectedFilter == "Tjedan") {
-            add(Calendar.DAY_OF_YEAR, 7)
-        } else {
-            add(Calendar.MONTH, 1)
-        }
     }
 
     return this.filter { item ->
@@ -586,7 +594,7 @@ fun List<Pair<String, Double>>.filterBySelectedPeriod(
 
         date != null &&
                 !date.before(startDate.time) &&
-                date.before(endDate.time)
+                !date.after(today.time)
     }
 }
 
