@@ -29,15 +29,19 @@ class TaskNotificationReceiver : BroadcastReceiver() {
         val message = intent.getStringExtra("message") ?: "Imaš nadolazeću obavezu."
 
         val channelId = "task_reminders"
+
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        val channel = NotificationChannel(
-            channelId,
-            "Podsjetnici za obaveze",
-            NotificationManager.IMPORTANCE_HIGH
-        )
-        notificationManager.createNotificationChannel(channel)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Podsjetnici za obaveze",
+                NotificationManager.IMPORTANCE_HIGH
+            )
+
+            notificationManager.createNotificationChannel(channel)
+        }
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_launcher_foreground)

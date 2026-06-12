@@ -48,7 +48,6 @@ fun AddTaskScreen(
     var showEndTimePicker by remember { mutableStateOf(false) }
 
     val taskTypes = listOf("Predavanje", "Ispit", "Kolokvij", "Smjena", "Ostalo")
-    val statusMessage by taskViewModel.statusMessage.collectAsState()
 
     val selectedTask by taskViewModel.selectedTask.collectAsState()
     val isEditMode = !taskId.isNullOrBlank()
@@ -61,6 +60,8 @@ fun AddTaskScreen(
     val notificationScheduler = remember { NotificationScheduler(context) }
 
     var isSaving by remember { mutableStateOf(false) }
+
+    val statusMessage by taskViewModel.statusMessage.collectAsState()
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -86,6 +87,15 @@ fun AddTaskScreen(
             startTime = task.startTime
             endTime = task.endTime
             selectedType = task.type
+        }
+    }
+
+    LaunchedEffect(statusMessage) {
+        if (statusMessage.startsWith("Greška") ||
+            statusMessage.contains("preklapa") ||
+            statusMessage.contains("nije prijavljen")
+        ) {
+            isSaving = false
         }
     }
 
@@ -199,6 +209,8 @@ fun AddTaskScreen(
         Button(
             onClick = {
                 if (isSaving) return@Button
+
+                taskViewModel.clearStatusMessage()
                 isSaving = true
 
                 val task = Task(
@@ -214,12 +226,24 @@ fun AddTaskScreen(
 
                 if (isEditMode) {
                     taskViewModel.updateTask(task) {
-                        notificationScheduler.scheduleTaskReminder(task)
+                        try {
+                            notificationScheduler.scheduleTaskReminder(task)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+
+                        isSaving = false
                         navController.navigate(Screen.Calendar.route)
                     }
                 } else {
                     taskViewModel.addTask(task) {
-                        notificationScheduler.scheduleTaskReminder(task)
+                        try {
+                            notificationScheduler.scheduleTaskReminder(task)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+
+                        isSaving = false
                         navController.navigate(Screen.Calendar.route)
                     }
                 }

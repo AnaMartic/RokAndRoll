@@ -17,24 +17,18 @@ class NotificationScheduler(
 
         val reminderTime = Calendar.getInstance().apply {
             time = taskDateTime.time
-            add(Calendar.MINUTE, -15)
+            add(Calendar.HOUR_OF_DAY, -1)
         }
 
         val now = Calendar.getInstance()
 
-        val finalReminderTime = if (reminderTime.after(now)) {
-            reminderTime
-        } else {
-            taskDateTime
-        }
-
-        if (finalReminderTime.before(now)) return
+        if (reminderTime.before(now)) return
 
         val intent = Intent(context, TaskNotificationReceiver::class.java).apply {
             putExtra("title", "Podsjetnik: ${task.title}")
             putExtra(
                 "message",
-                "${task.type} počinje u ${task.startTime}."
+                "${task.type} počinje za 1 sat, u ${task.startTime}."
             )
         }
 
@@ -50,7 +44,7 @@ class NotificationScheduler(
 
         alarmManager.set(
             AlarmManager.RTC_WAKEUP,
-            finalReminderTime.timeInMillis,
+            reminderTime.timeInMillis,
             pendingIntent
         )
     }

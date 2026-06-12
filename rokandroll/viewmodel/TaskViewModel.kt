@@ -128,6 +128,10 @@ class TaskViewModel : ViewModel() {
             }
         }
     }
+
+    fun clearStatusMessage() {
+        _statusMessage.value = ""
+    }
 }
 
 fun timesOverlap(
